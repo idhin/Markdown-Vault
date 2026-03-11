@@ -1,0 +1,23 @@
+<% var pageTitle = 'Admin Login'; %>
+<%- include('../partials/head') %>
+<%- include('../partials/nav', { isAdmin: false }) %>
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+  <div class="max-w-sm mx-auto mt-20">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
+      <h1 class="text-2xl font-bold mb-6 text-center">Admin Login</h1>
+      <% if (error) { %>
+        <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm"><%= error %></div>
+      <% } %>
+      <form method="POST" action="/admin/login">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+        <input type="password" name="password" required autofocus
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+        <button type="submit"
+          class="mt-4 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+          Masuk
+        </button>
+      </form>
+    </div>
+  </div>
+</main>
+<%- include('../partials/footer') %>

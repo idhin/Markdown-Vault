@@ -1,0 +1,11 @@
+<% var pageTitle = 'Error'; %>
+<%- include('partials/head') %>
+<%- include('partials/nav', { isAdmin: false }) %>
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+  <div class="flex flex-col items-center justify-center min-h-[60vh]">
+    <div class="text-8xl font-black text-gray-200 dark:text-gray-800 select-none">!</div>
+    <p class="mt-4 text-lg text-gray-500 dark:text-gray-400"><%= message %></p>
+    <a href="/" class="mt-6 inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline">&larr; Kembali ke beranda</a>
+  </div>
+</main>
+<%- include('partials/footer') %>

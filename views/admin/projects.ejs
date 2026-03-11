@@ -1,0 +1,55 @@
+<% var pageTitle = 'Admin - Projects'; %>
+<%- include('../partials/head') %>
+<%- include('../partials/nav', { isAdmin: true }) %>
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <h1 class="text-3xl font-bold">Projects</h1>
+    <button onclick="document.getElementById('new-project-modal').classList.remove('hidden')"
+      class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Project Baru
+    </button>
+  </div>
+
+  <% if (projects.length === 0) { %>
+    <div class="text-center py-20">
+      <svg class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+      <p class="mt-4 text-gray-500 dark:text-gray-400">Belum ada project. Buat project pertamamu!</p>
+    </div>
+  <% } else { %>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <% projects.forEach(function(p) { %>
+        <a href="/admin/project/<%= p.id %>"
+          class="group bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all">
+          <div class="flex items-start justify-between">
+            <div>
+              <h2 class="text-lg font-semibold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"><%= p.name %></h2>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400"><%= p.pageCount %> halaman</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </div>
+          <p class="mt-3 text-xs text-gray-400 dark:text-gray-500">Dibuat <%= new Date(p.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) %></p>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <!-- New Project Modal -->
+  <div id="new-project-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 p-8 w-full max-w-md mx-4">
+      <h2 class="text-xl font-bold mb-4">Buat Project Baru</h2>
+      <form method="POST" action="/admin/project">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nama Project</label>
+        <input type="text" name="name" required autofocus placeholder="Contoh: Dokumentasi API"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+        <div class="flex gap-3 mt-6">
+          <button type="button" onclick="document.getElementById('new-project-modal').classList.add('hidden')"
+            class="flex-1 py-2.5 px-4 border border-gray-300 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Batal</button>
+          <button type="submit"
+            class="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">Buat</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+<%- include('../partials/footer') %>

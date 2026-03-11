@@ -1,0 +1,47 @@
+<% var pageTitle = page.title; %>
+<%- include('../partials/head') %>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<div class="fixed top-4 right-4 z-50 flex items-center gap-2">
+  <button onclick="copyCurrentLink()"
+    class="p-2.5 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Copy link">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+  </button>
+  <a href="/s/<%= project.uuid %>/<%= page.slug %>/pdf"
+    class="p-2.5 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Export PDF">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+  </a>
+  <button id="theme-toggle" class="p-2.5 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Toggle theme">
+    <svg id="icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+    <svg id="icon-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+  </button>
+</div>
+<main class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+  <article class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 sm:p-10 prose dark:prose-invert prose-blue max-w-none
+    prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg
+    prose-pre:bg-gray-50 prose-pre:dark:bg-gray-800 prose-pre:rounded-xl prose-pre:border prose-pre:border-gray-200 prose-pre:dark:border-gray-700
+    prose-code:before:hidden prose-code:after:hidden
+    prose-img:rounded-xl prose-img:shadow-md prose-img:max-w-full
+    prose-a:text-blue-600 prose-a:dark:text-blue-400
+    prose-blockquote:border-blue-500 prose-blockquote:dark:border-blue-400">
+    <%- htmlContent %>
+  </article>
+  <div class="mt-4 text-center text-xs text-gray-400 dark:text-gray-600">
+    <%= page.viewCount || 0 %> views &bull; <%= new Date(page.updatedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %>
+  </div>
+</main>
+
+<script>
+document.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+
+function copyCurrentLink() {
+  const url = window.location.origin + '/s/<%= project.uuid %>/<%= page.slug %>';
+  navigator.clipboard.writeText(url).then(() => {
+    const toast = document.createElement('div');
+    toast.textContent = 'Link disalin!';
+    toast.className = 'fixed bottom-6 right-6 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-lg shadow-lg text-sm font-medium z-50';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+  });
+}
+</script>
+<%- include('../partials/footer') %>

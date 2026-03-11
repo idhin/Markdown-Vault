@@ -1,0 +1,219 @@
+<% var pageTitle = page ? 'Edit - ' + page.title : 'Halaman Baru'; %>
+<%- include('../partials/head') %>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<%- include('../partials/nav', { isAdmin: true }) %>
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+  <div class="mb-6">
+    <a href="/admin/project/<%= project.id %>" class="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">&larr; <%= project.name %></a>
+  </div>
+
+  <h1 class="text-3xl font-bold mb-8"><%= page ? 'Edit Halaman' : 'Buat Halaman Baru' %></h1>
+
+  <form method="POST"
+    action="<%= page ? `/admin/project/${project.id}/page/${page.id}/update` : `/admin/project/${project.id}/page` %>"
+    class="space-y-6">
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Judul</label>
+        <input type="text" name="title" value="<%= page ? page.title : '' %>" required placeholder="Judul halaman"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password <% if (page) { %><span class="text-gray-400 font-normal">(kosongkan jika tidak diubah)</span><% } %></label>
+        <input type="text" name="password" <%= page ? '' : 'required' %> placeholder="Password untuk akses halaman"
+          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Expiry Date <span class="text-gray-400 font-normal">(opsional)</span></label>
+      <input type="datetime-local" name="expiresAt" value="<%= page && page.expiresAt ? new Date(page.expiresAt).toISOString().slice(0,16) : '' %>"
+        class="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+    </div>
+
+    <!-- Markdown Editor -->
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Konten Markdown</label>
+        <div class="flex items-center gap-3">
+          <% if (page) { %>
+            <button type="button" onclick="document.getElementById('image-upload-input').click()"
+              class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              Upload Gambar
+            </button>
+            <input type="file" id="image-upload-input" multiple accept="image/*" class="hidden">
+          <% } %>
+          <div class="flex rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden">
+            <button type="button" id="btn-write" onclick="switchTab('write')"
+              class="px-3 py-1 text-sm font-medium bg-blue-600 text-white">Write</button>
+            <button type="button" id="btn-preview" onclick="switchTab('preview')"
+              class="px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800">Preview</button>
+          </div>
+        </div>
+      </div>
+      <div id="editor-dropzone" class="relative">
+        <textarea name="content" id="md-editor" required placeholder="Tulis markdown di sini... (drag & drop gambar untuk upload)"
+          class="w-full h-96 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-mono text-sm resize-y"><%= page ? page.content : '' %></textarea>
+        <div id="drop-overlay" class="hidden absolute inset-0 bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center pointer-events-none">
+          <span class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm">Drop gambar di sini</span>
+        </div>
+      </div>
+      <div id="upload-status" class="mt-1 text-sm text-gray-500 dark:text-gray-400"></div>
+      <div id="md-preview" class="hidden w-full min-h-[24rem] p-6 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 prose dark:prose-invert max-w-none overflow-auto"></div>
+    </div>
+
+    <% if (page) { %>
+    <div id="uploaded-files-section" class="hidden">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File yang diupload</label>
+      <div id="uploaded-files-list" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+    </div>
+    <% } %>
+
+    <div class="flex gap-3">
+      <button type="submit"
+        class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+        <%= page ? 'Simpan Perubahan' : 'Buat Halaman' %>
+      </button>
+      <a href="/admin/project/<%= project.id %>"
+        class="px-6 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Batal</a>
+    </div>
+  </form>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+const PAGE_ID = '<%= page ? page.id : "" %>';
+const PROJECT_ID = '<%= project.id %>';
+
+function switchTab(tab) {
+  const editor = document.getElementById('md-editor');
+  const preview = document.getElementById('md-preview');
+  const btnWrite = document.getElementById('btn-write');
+  const btnPreview = document.getElementById('btn-preview');
+
+  if (tab === 'preview') {
+    let mdText = editor.value;
+    if (PAGE_ID) {
+      mdText = mdText.replace(
+        /!\[([^\]]*)\]\((?!https?:\/\/|\/uploads\/)([^)]+)\)/g,
+        (m, alt, src) => {
+          let decoded;
+          try { decoded = decodeURIComponent(src.trim()); } catch { decoded = src.trim(); }
+          const encoded = decoded.split('/').map(s => encodeURIComponent(s)).join('/');
+          return `![${alt}](/uploads/${PAGE_ID}/${encoded})`;
+        }
+      );
+    }
+    const html = marked.parse(mdText);
+    preview.innerHTML = html;
+    preview.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+    editor.parentElement.classList.add('hidden');
+    preview.classList.remove('hidden');
+    btnPreview.className = 'px-3 py-1 text-sm font-medium bg-blue-600 text-white';
+    btnWrite.className = 'px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800';
+  } else {
+    editor.parentElement.classList.remove('hidden');
+    preview.classList.add('hidden');
+    btnWrite.className = 'px-3 py-1 text-sm font-medium bg-blue-600 text-white';
+    btnPreview.className = 'px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800';
+  }
+}
+
+// Image upload handling (only for existing pages)
+if (PAGE_ID) {
+  const editor = document.getElementById('md-editor');
+  const dropzone = document.getElementById('editor-dropzone');
+  const overlay = document.getElementById('drop-overlay');
+  const statusEl = document.getElementById('upload-status');
+  const imageInput = document.getElementById('image-upload-input');
+
+  async function uploadImages(files) {
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (imageFiles.length === 0) return;
+
+    statusEl.textContent = `Uploading ${imageFiles.length} file...`;
+    const formData = new FormData();
+    imageFiles.forEach(f => formData.append('images', f));
+
+    try {
+      const res = await fetch(`/admin/project/${PROJECT_ID}/page/${PAGE_ID}/upload-image`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        const insertText = data.files.map(f => f.markdown).join('\n');
+        const pos = editor.selectionStart;
+        const before = editor.value.substring(0, pos);
+        const after = editor.value.substring(pos);
+        editor.value = before + (before.endsWith('\n') || before === '' ? '' : '\n') + insertText + '\n' + after;
+        statusEl.textContent = `${data.files.length} gambar berhasil diupload`;
+        loadFileList();
+        setTimeout(() => { statusEl.textContent = ''; }, 3000);
+      }
+    } catch (err) {
+      statusEl.textContent = 'Gagal upload: ' + err.message;
+    }
+  }
+
+  imageInput.addEventListener('change', () => uploadImages(imageInput.files));
+
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); overlay.classList.remove('hidden'); });
+  dropzone.addEventListener('dragleave', (e) => {
+    if (!dropzone.contains(e.relatedTarget)) overlay.classList.add('hidden');
+  });
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    overlay.classList.add('hidden');
+    uploadImages(e.dataTransfer.files);
+  });
+
+  editor.addEventListener('paste', (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const images = Array.from(items).filter(i => i.type.startsWith('image/')).map(i => i.getAsFile()).filter(Boolean);
+    if (images.length > 0) {
+      e.preventDefault();
+      uploadImages(images);
+    }
+  });
+
+  async function loadFileList() {
+    try {
+      const res = await fetch(`/admin/project/${PROJECT_ID}/page/${PAGE_ID}/files`);
+      const data = await res.json();
+      const section = document.getElementById('uploaded-files-section');
+      const list = document.getElementById('uploaded-files-list');
+      if (data.files && data.files.length > 0) {
+        section.classList.remove('hidden');
+        list.innerHTML = data.files.map(f => {
+          const isImage = /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.path);
+          return `<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-2 text-center group cursor-pointer" onclick="insertFileRef('${f.path.replace(/'/g, "\\'")}')">
+            ${isImage
+              ? `<img src="${f.url}" class="w-full h-20 object-cover rounded mb-1" alt="${f.path}">`
+              : `<div class="w-full h-20 flex items-center justify-center text-gray-400"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>`}
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate" title="${f.path}">${f.path}</p>
+            <p class="text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">Klik untuk insert</p>
+          </div>`;
+        }).join('');
+      }
+    } catch {}
+  }
+
+  window.insertFileRef = function(filepath) {
+    const editor = document.getElementById('md-editor');
+    const pos = editor.selectionStart;
+    const name = filepath.split('/').pop().replace(/\.[^.]+$/, '');
+    const ref = `![${name}](${filepath})`;
+    const before = editor.value.substring(0, pos);
+    const after = editor.value.substring(pos);
+    editor.value = before + (before.endsWith('\n') || before === '' ? '' : '\n') + ref + '\n' + after;
+    editor.focus();
+  };
+
+  loadFileList();
+}
+</script>
+<%- include('../partials/footer') %>

@@ -1,0 +1,19 @@
+services:
+  markdown-vault:
+    build: .
+    container_name: markdown-vault
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - SESSION_SECRET=${SESSION_SECRET:-change-this-to-a-random-secret-string}
+      - ADMIN_WHITELIST_IPS=${ADMIN_WHITELIST_IPS:-}
+    volumes:
+      - vault-data:/app/data
+      - vault-uploads:/app/uploads
+
+volumes:
+  vault-data:
+  vault-uploads:

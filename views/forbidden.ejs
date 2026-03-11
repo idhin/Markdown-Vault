@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>403 - Access Denied</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0a;
+      color: #00ff41;
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .scanline {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,65,0.015) 2px, rgba(0,255,65,0.015) 4px);
+      pointer-events: none;
+      z-index: 10;
+    }
+    .flicker {
+      animation: flicker 0.15s infinite;
+    }
+    @keyframes flicker {
+      0% { opacity: 0.97; }
+      50% { opacity: 1; }
+      100% { opacity: 0.98; }
+    }
+    .container {
+      max-width: 620px;
+      padding: 2rem;
+      text-align: left;
+    }
+    .error-code {
+      font-size: 5rem;
+      font-weight: 700;
+      color: #ff0040;
+      text-shadow: 0 0 20px rgba(255,0,64,0.5), 0 0 40px rgba(255,0,64,0.2);
+      line-height: 1;
+    }
+    .prompt { color: #666; margin-top: 2rem; font-size: 0.85rem; line-height: 1.8; }
+    .prompt .cmd { color: #00ff41; }
+    .prompt .err { color: #ff0040; }
+    .prompt .warn { color: #ffcc00; }
+    .message {
+      margin-top: 1.5rem;
+      font-size: 1.1rem;
+      color: #00ff41;
+      text-shadow: 0 0 10px rgba(0,255,65,0.3);
+    }
+    .sub {
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      color: #444;
+    }
+    .cursor-blink::after {
+      content: '█';
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+    .ip-info {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: rgba(255,0,64,0.05);
+      border: 1px solid rgba(255,0,64,0.2);
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: #ff0040;
+    }
+  </style>
+</head>
+<body>
+  <div class="scanline"></div>
+  <div class="container flicker">
+    <div class="error-code">403</div>
+    <div class="message">Kamu tidak punya kepentingan disini.<span class="cursor-blink"></span></div>
+    <div class="prompt">
+      <div><span class="cmd">$</span> access --verify --target /admin</div>
+      <div><span class="err">[ERROR]</span> ACCESS_DENIED: unauthorized IP address</div>
+      <div><span class="err">[ERROR]</span> IP <%= clientIp %> is not in whitelist</div>
+      <div><span class="warn">[WARN]</span> incident logged and reported</div>
+      <div><span class="cmd">$</span> <span class="cursor-blink"></span></div>
+    </div>
+    <div class="ip-info">
+      THREAT DETECTED<br>
+      IP: <%= clientIp %><br>
+      TIME: <%= new Date().toISOString() %><br>
+      STATUS: BLOCKED
+    </div>
+    <div class="sub">Connection terminated. This incident will be reported.</div>
+  </div>
+</body>
+</html>
