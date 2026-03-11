@@ -95,15 +95,15 @@
     <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 p-8 w-full max-w-lg mx-4">
       <h2 class="text-xl font-bold mb-2">Upload File Markdown</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Upload file .md beserta gambar/asset yang direferensikan di dalamnya. Struktur folder akan dipertahankan.</p>
-      <form method="POST" action="/admin/project/<%= project.id %>/upload" enctype="multipart/form-data">
+      <form id="upload-form">
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File .md + Gambar/Assets</label>
           <div id="upload-dropzone" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 text-center hover:border-blue-400 dark:hover:border-blue-500 transition-colors cursor-pointer">
             <svg class="w-10 h-10 mx-auto text-gray-400 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
             <p class="text-sm text-gray-600 dark:text-gray-400">Drag & drop files atau <span class="text-blue-600 dark:text-blue-400 font-medium">browse</span></p>
             <p class="text-xs text-gray-400 mt-1">Pilih file .md dan semua gambar/folder yang direferensikan</p>
-            <input type="file" name="files" multiple webkitdirectory class="hidden" id="upload-files-dir">
-            <input type="file" name="files" multiple class="hidden" id="upload-files-flat">
+            <input type="file" multiple webkitdirectory class="hidden" id="upload-files-dir">
+            <input type="file" multiple class="hidden" id="upload-files-flat">
           </div>
           <div class="mt-2 flex gap-2">
             <button type="button" onclick="document.getElementById('upload-files-flat').click()"
@@ -116,12 +116,12 @@
         </div>
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password untuk halaman</label>
-          <input type="text" name="password" required placeholder="Password akses halaman"
+          <input type="text" name="password" id="upload-password" required placeholder="Password akses halaman"
             class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
         </div>
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Expiry Date <span class="text-gray-400 font-normal">(opsional)</span></label>
-          <input type="datetime-local" name="expiresAt"
+          <input type="datetime-local" name="expiresAt" id="upload-expires"
             class="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
         </div>
         <div class="flex gap-3">
@@ -136,43 +136,78 @@
 </main>
 <script>
 (function() {
-  const fileInputFlat = document.getElementById('upload-files-flat');
-  const fileInputDir = document.getElementById('upload-files-dir');
-  const fileList = document.getElementById('upload-file-list');
-  const dropzone = document.getElementById('upload-dropzone');
-  const form = dropzone.closest('form');
+  var fileInputFlat = document.getElementById('upload-files-flat');
+  var fileInputDir = document.getElementById('upload-files-dir');
+  var fileList = document.getElementById('upload-file-list');
+  var dropzone = document.getElementById('upload-dropzone');
+  var uploadForm = document.getElementById('upload-form');
 
-  let collectedFiles = new DataTransfer();
+  var collectedEntries = [];
 
-  function addFiles(newFiles) {
-    for (const f of newFiles) {
-      collectedFiles.items.add(f);
+  function getRelativePath(file) {
+    if (file.webkitRelativePath) {
+      var parts = file.webkitRelativePath.split('/');
+      return parts.slice(1).join('/');
+    }
+    return file.name;
+  }
+
+  function addFiles(fileListObj, useRelativePath) {
+    for (var i = 0; i < fileListObj.length; i++) {
+      var f = fileListObj[i];
+      var relPath = useRelativePath ? getRelativePath(f) : f.name;
+      collectedEntries.push({ file: f, path: relPath });
     }
     renderFileList();
   }
 
   function renderFileList() {
-    const files = collectedFiles.files;
-    if (files.length === 0) {
-      fileList.innerHTML = '';
-      return;
-    }
-    const mdCount = Array.from(files).filter(f => f.name.endsWith('.md')).length;
-    const imgCount = files.length - mdCount;
-    fileList.innerHTML = '<span class="font-medium">' + files.length + ' file dipilih</span> (' + mdCount + ' .md, ' + imgCount + ' assets)';
-
-    fileInputFlat.files = collectedFiles.files;
+    if (collectedEntries.length === 0) { fileList.innerHTML = ''; return; }
+    var mdCount = collectedEntries.filter(function(e) { return e.path.endsWith('.md'); }).length;
+    var imgCount = collectedEntries.length - mdCount;
+    fileList.innerHTML = '<span class="font-medium">' + collectedEntries.length + ' file dipilih</span> (' + mdCount + ' .md, ' + imgCount + ' assets)';
   }
 
-  fileInputFlat.addEventListener('change', () => { addFiles(fileInputFlat.files); });
-  fileInputDir.addEventListener('change', () => { addFiles(fileInputDir.files); });
+  fileInputFlat.addEventListener('change', function() { addFiles(fileInputFlat.files, false); });
+  fileInputDir.addEventListener('change', function() { addFiles(fileInputDir.files, true); });
 
-  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('border-blue-400', 'dark:border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/10'); });
-  dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('border-blue-400', 'dark:border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/10'); });
-  dropzone.addEventListener('drop', (e) => {
+  dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.classList.add('border-blue-400', 'bg-blue-50'); });
+  dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('border-blue-400', 'bg-blue-50'); });
+  dropzone.addEventListener('drop', function(e) {
     e.preventDefault();
-    dropzone.classList.remove('border-blue-400', 'dark:border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/10');
-    addFiles(e.dataTransfer.files);
+    dropzone.classList.remove('border-blue-400', 'bg-blue-50');
+    addFiles(e.dataTransfer.files, false);
+  });
+
+  uploadForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (collectedEntries.length === 0) return;
+
+    var pw = document.getElementById('upload-password').value;
+    if (!pw) { alert('Password wajib diisi'); return; }
+
+    var btn = document.getElementById('upload-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Uploading...';
+
+    var fd = new FormData();
+    fd.append('password', pw);
+    fd.append('expiresAt', document.getElementById('upload-expires').value || '');
+
+    var paths = [];
+    for (var i = 0; i < collectedEntries.length; i++) {
+      fd.append('files', collectedEntries[i].file, collectedEntries[i].path);
+      paths.push(collectedEntries[i].path);
+    }
+    fd.append('filePaths', JSON.stringify(paths));
+
+    fetch('/admin/project/<%= project.id %>/upload', { method: 'POST', body: fd })
+      .then(function(res) {
+        if (res.redirected) { window.location.href = res.url; }
+        else if (res.ok) { window.location.reload(); }
+        else { alert('Upload gagal'); btn.disabled = false; btn.textContent = 'Upload & Buat Halaman'; }
+      })
+      .catch(function() { alert('Upload gagal'); btn.disabled = false; btn.textContent = 'Upload & Buat Halaman'; });
   });
 })();
 

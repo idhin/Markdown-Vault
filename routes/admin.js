@@ -132,10 +132,14 @@ router.post('/project/:projectId/upload', requireAuth, upload.array('files', 200
     return res.redirect(`/admin/project/${projectId}`);
   }
 
-  const mdFile = req.files.find(f => f.originalname.endsWith('.md'));
-  if (!mdFile) {
+  let filePaths = [];
+  try { filePaths = JSON.parse(req.body.filePaths || '[]'); } catch {}
+
+  const mdIndex = req.files.findIndex(f => f.originalname.endsWith('.md'));
+  if (mdIndex === -1) {
     return res.status(400).render('error', { message: 'Tidak ada file .md yang diupload' });
   }
+  const mdFile = req.files[mdIndex];
 
   const mdContent = mdFile.buffer.toString('utf-8');
   const titleFromFilename = path.basename(mdFile.originalname, '.md').replace(/[-_]/g, ' ');
@@ -148,10 +152,13 @@ router.post('/project/:projectId/upload', requireAuth, upload.array('files', 200
   });
 
   const uploadsDir = store.getPageUploadsDir(page.id);
-  for (const file of req.files) {
+  for (let i = 0; i < req.files.length; i++) {
+    const file = req.files[i];
     if (file.originalname.endsWith('.md')) continue;
 
-    const relativePath = file.originalname;
+    const relativePath = (filePaths[i] && filePaths[i] !== file.originalname)
+      ? filePaths[i]
+      : file.originalname;
     const targetPath = path.join(uploadsDir, relativePath);
     const targetDir = path.dirname(targetPath);
     if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
