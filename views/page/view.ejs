@@ -33,29 +33,23 @@
 <script>
 document.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
 
-function copyToClipboard(text) {
-  if (navigator.clipboard && window.isSecureContext) {
-    return navigator.clipboard.writeText(text);
-  }
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.cssText = 'position:fixed;left:-9999px';
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand('copy');
-  ta.remove();
-  return Promise.resolve();
-}
-
 function copyCurrentLink() {
-  const url = window.location.origin + '/s/<%= project.uuid %>/<%= page.slug %>';
-  copyToClipboard(url).then(() => {
-    const toast = document.createElement('div');
-    toast.textContent = 'Link disalin!';
-    toast.className = 'fixed bottom-6 right-6 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-lg shadow-lg text-sm font-medium z-50 animate-fade-in';
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-  });
+  var url = window.location.origin + '/s/<%= project.uuid %>/<%= page.slug %>';
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = url;
+    ta.style.cssText = 'position:fixed;opacity:0;left:-9999px;top:-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+  } catch(e) {}
+  var toast = document.createElement('div');
+  toast.textContent = 'Link disalin!';
+  toast.className = 'fixed bottom-6 right-6 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-lg shadow-lg text-sm font-medium z-50 animate-fade-in';
+  document.body.appendChild(toast);
+  setTimeout(function(){ toast.remove(); }, 2000);
 }
 </script>
 <%- include('../partials/footer') %>
