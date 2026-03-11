@@ -1,19 +1,11 @@
-FROM node:20-slim
+FROM node:20-bookworm-slim
 
-RUN apt-get update && apt-get install -y \
+RUN echo "nameserver 8.8.8.8" >> /etc/resolv.conf && \
+    echo "nameserver 1.1.1.1" >> /etc/resolv.conf && \
+    apt-get update && apt-get install -y \
     chromium \
     fonts-liberation \
     fonts-noto-cjk \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libcups2 \
-    libdrm2 \
-    libgbm1 \
-    libnss3 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    xdg-utils \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 

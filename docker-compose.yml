@@ -1,10 +1,15 @@
 services:
   markdown-vault:
-    build: .
+    build:
+      context: .
+      network: host
     container_name: markdown-vault
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       - PORT=3000
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
