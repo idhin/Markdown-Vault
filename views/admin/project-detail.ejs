@@ -176,9 +176,23 @@
   });
 })();
 
+function copyToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  }
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  ta.remove();
+  return Promise.resolve();
+}
+
 function copyLink(path) {
   const url = window.location.origin + path;
-  navigator.clipboard.writeText(url).then(() => {
+  copyToClipboard(url).then(() => {
     const toast = document.createElement('div');
     toast.textContent = 'Link disalin!';
     toast.className = 'fixed bottom-6 right-6 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-lg shadow-lg text-sm font-medium z-50 animate-fade-in';

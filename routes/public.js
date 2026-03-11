@@ -5,17 +5,6 @@ const { marked } = require('marked');
 const hljs = require('highlight.js');
 const store = require('../lib/store');
 
-marked.setOptions({
-  highlight(code, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      return hljs.highlight(code, { language: lang }).value;
-    }
-    return hljs.highlightAuto(code).value;
-  },
-  breaks: true,
-  gfm: true
-});
-
 function encodeImagePath(src) {
   try {
     const decoded = decodeURIComponent(src);
@@ -25,12 +14,31 @@ function encodeImagePath(src) {
   }
 }
 
+marked.setOptions({
+  breaks: true,
+  gfm: true
+});
+
+marked.use({
+  renderer: {
+    image({ href, title, text }) {
+      if (href && !href.startsWith('http://') && !href.startsWith('https://')) {
+        href = encodeImagePath(href);
+      }
+      return `<img src="${href}" alt="${text || ''}"${title ? ` title="${title}"` : ''} style="max-width:100%;height:auto;" />`;
+    }
+  }
+});
+
 function rewriteImagePaths(mdContent, pageId) {
   return mdContent.replace(
-    /!\[([^\]]*)\]\((?!https?:\/\/|\/uploads\/)([^)]+)\)/g,
+    /!\[([^\]]*)\]\((?!https?:\/\/)([^)]+)\)/g,
     (match, alt, src) => {
-      const encoded = encodeImagePath(src.trim());
-      return `![${alt}](/uploads/${pageId}/${encoded})`;
+      let trimmed = src.trim();
+      if (trimmed.startsWith('/uploads/')) {
+        return match;
+      }
+      return `![${alt}](/uploads/${pageId}/${trimmed})`;
     }
   );
 }
